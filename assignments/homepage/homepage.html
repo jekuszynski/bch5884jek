@@ -2,9 +2,9 @@
 <html>
 	<head>
 		<title>Jason Kuszynski's Webpage</title>
+	<!--Going for a Dark Mode look here. Dark Mode is clearly superior :^)-->
 		<style>
-		<!--Going for a more dark mode look here-->
-			h1 {`
+			h1{
 				font-family:"Gill Sans MT", sans-serif;
 			}
 			div {
@@ -14,59 +14,79 @@
 				background:#303538;
 				color:#C4C9CC;
 				font-family:Arial, sans-serif;
+				text-align:justify;
+			}
+			a{
+				color:cyan;
+			}
+			img{
+				max-width:500%;
+				height: auto;
+			}
+			table{
+				width: 100%;
+				table-layout: fixed;
+				border-collapse: separate;
+				border-spacing: 15px;
+
 			}
 		</style>
+		<!--Want to make <a> links in future all open to new tab. "target="_blank;""-->
 	</head>
 	<body>
 		<div>
 			<h1 style="text-align:center;">Welcome to Jason's Webpage</h1>
 		</div>
 		<hr>
-		<div><!--This section contains two articles, this is an example on a comment in HTML-->
-			<h2>Projects Jason is currently working on:</h2>	
-		<table>
-			<tr>
-				<td style="text-align:center;"><h3>Plasmonic Semiconductor Design</h3></td>
-				<td style="text-align:center;"><h3>Instrument Development</h3></td>
-			</tr>
-			<tr>
-				<td><img src="lsprs_milliron.jpg" height="500"; float=left>Oxide semiconductors are frequently observed with a localized surface plasmon resonance (LSPR) at various energy regimes, as seen above.<a href="https://pubs.acs.org/doi/10.1021/acs.chemrev.7b00613" target="_blank"><sup>1</sup></a></td>
-				<td><img src="mcd_setup.jpg" height="500"; float=right>In collaboration with Dr. Steve McGill at the National High Magnetic Field Lab (NHMFL), Jason is working on the development and optimiziation of a high field, low temperature, mid-infrared (MIR) MCD setup.</td>
-			</tr>
-			<tr>
-		 		<td><h4>Morphology Control</h4></td>
-				<td><h4>Magnetic Circular Dichroism</h4></td>
-			</tr>
-			<tr>
-
-			</tr>
-		</table>
-		<h2>Helpful Definitions</h2>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-			<p><u><b>Plasmon</b></u> - A collective oscillation of free-carriers (electrons or holes)</p>
-		</div>
-		<hr><!--this makes a beak in page-->
 		<div>
-		<h1 style="color:red;">WIP Testing Area</h1>
-		<!--This is an article about plasmons - wow-->
-		<p style="color:red;">test</p>
+			<h3>Projects Jason is currently working on...</h3>	
+			<!--Goal with table is to split this section of website into two columns. Maybe more in future. Maybe there's a better way to do this?-->
+			<table>
+				<tr><!--Column Titles-->
+					<td style="text-align:center;"><h2>Plasmonic Semiconductor Design</h2></td>
+					<td style="text-align:center;"><h2>Instrument Development</h2></td>
+				</tr>
+				<tr>
+					<td><!--First Column Body-->
+						<p><img src="lsprs_milliron.jpg" style="float:left;margin-right:20px;">
+						Oxide semiconductors are frequently observed with a localized surface plasmon resonance (LSPR) at various energy regimes.<a href="https://pubs.acs.org/doi/10.1021/acs.chemrev.7b00613"><sup>1</sup></a> These plasmon absorption features can be used in a variety of practical applications such Infrared Neural Stimulation (INS) for treating mental disorders such as Parkinson's or Alzheimer's, or for commercial use in "Smart Window" type applications that can be turned on and off with applied voltage.</p>
+						<h4>Morphology Control</h4>
+						<p>The resonance frequency of a plasmon has been shown in previous literature to be highly dependent on morphology.<a href=""><sup>[cit needed]</sup></a> It is proposed that by carefully controlling the morphology of a plasmonic nanoparticle along specific x, y, and z axes, the spectral shape of a plasmonic feature can be controllably modified by its resonance frequency and peak intensity.</p>
+					</td>
+					<td><!--Second Column Body-->
+						<p><img src="mcd_setup.jpg" style="float:left;margin-right:20px;">
+						In collaboration with Dr. Steve McGill at the National High Magnetic Field Lab (NHMFL), Jason is working on the development and optimiziation of a high field, low temperature, mid-infrared (MIR) Magnetic Circular Dichroism (MCD) setup. Previous literature works are largely limited to low field, MIR MCD measurements, however with high field it is apparent that new MCD features are observed to appear and disappear as field from 5 - 10 T are explored in previously thought to be exhausted materials such as Zinc Oxide (ZnO) and Indium Tin Oxide (ITO).</p>
+						<h4>Magnetic Circular Dichroism</h4>			
+						<p>MCD is a difference absorption spectroscopy technique. By using a magnetic field to induce Zeeman spliting in the energy levels of a semiconductor material, differences between left and right circularly polarized light (LCP, RCP) are observed, resulting in an MCD spectrum. Spectra are typically deconvoluted and classified by the identification of three separate A, B, and C terms.</p>
+					</td>
+				</tr>	
+			</table>
 		</div>
-		<pre><!--Use to enter lines where line breaks matter-->
-		Roses are red
-		Violets are blue
-		Blah bah blah
-		</pre>
-		<ol>
-			<li>Item 1</li>
-			<li>Item 2</li>
-		</ol>
-		<ul>
-			<li>Apple</li>
-			<li>Orange</li>
-		</ul>
+		<hr>
+		<div>
+			<h2>Helpful Definitions</h2>
+				<p><u><b>Plasmon</b></u> - A collective oscillation of free carriers (electrons or holes)</p>
+		</div>
+		<hr>
+		<div>
+		<!--This section is for testing purposes-->
+			<h1 style="color:red;">Testing Area</h1>
+				<p style="color:red;">test</p>
+		</div>
+		<div>
+			<pre><!--Use to enter lines where line breaks matter-->
+			Roses are red
+			Violets are blue
+			Blah bah blah
+			</pre>
+			<ol>
+				<li>Item 1</li>
+				<li>Item 2</li>
+			</ol>
+			<ul>
+				<li>Apple</li>
+				<li>Orange</li>
+			</ul>
+		</div>
 	</body>
 <html>
