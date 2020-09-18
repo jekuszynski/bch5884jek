@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
-	<head>
+<html lang="en">
+	<head> 
+	<base target="_blank"/> <!--Use to make all links open in new tab! Yes!-->
 		<title>Jason Kuszynski's Webpage</title>
 	<!--Going for a Dark Mode look here. Dark Mode is clearly superior :^)-->
+	<!--For Assignment 2 specifically, many of the div elements and classes used are towards the bottom of the .html-->
 		<style>
 			h1{
 				font-family:"Gill Sans MT", sans-serif;
@@ -21,6 +23,7 @@
 			}
 			a{
 				color:cyan;
+				target-new
 			}
 			img{
 				max-width:50%;
@@ -32,6 +35,32 @@
 				border-collapse:separate;
 				border-spacing:15px;
 
+			}
+			a:visited{
+				color:magenta;
+			}
+			a:hover{
+				color:blue;
+			}
+			pre.references {
+            			overflow-x:auto;
+           			white-space:pre-wrap;
+            			word-wrap:break-word;
+         		}
+			.contact{ 
+				text-align:justify;
+				word-wrap:break-word;
+				max-width:250px;
+			}
+			.testing{
+				color:orange;
+			}
+			.contact_box{
+				border-style:ridge;
+				padding:0px 5px 0px;
+				text-align:justify;
+				line-height:0.3;
+				font-size:12px
 			}
 		</style>
 		<!--Want to make <a> links in future all open to new tab. "target="_blank;""-->
@@ -73,13 +102,23 @@
 		<hr>
 		<div>
 			<h2>References</h2>
-				<pre>
+				<pre class="references">
 	(1) Agrawal, A.; Cho, S. H.; Zandi, O.; Ghosh, S.; Johns, R. W.; Milliron, D. J. Localized Surface Plasmon Resonance in Semiconductor Nanocrystals. Chem. Rev. 2018, 118 (6), 3121–3207. <a href="https://doi.org/10.1021/acs.chemrev.7b00613">Link</a>
 	
 				</pre>
 		</div>
 		<hr>
-		<div>
+		<div class="contact">
+			<h3 style="text-align:center"><i>How Can I Contact Jason?</i></h3>
+			<p>In person, Jason can often be found on the second floor of the Chemical Sciences Building (CSL) in his laser lab.</p>
+			<div class="contact_box">
+				<p>Strouse Research Group</p>
+				<p>CSL 2503</p>
+				<p>j.e.kuszynski@fsu.edu</p>
+			</div>
+		</div>
+		<hr>
+		<div class="testing">
 		<!--This section is for testing purposes-->
 			<h1 style="color:red;">Testing Area</h1>
 				<p style="color:red;">test</p>
