@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-#
-#
+#https://github.com/jekuszynski/bch5884jek/blob/master/assignments/python_scripts/triangle_calc.py
+#-*- coding: utf-8 -*-
 
 import math
 
-x1, y1, x2, y2, x3, y3 = map(float, input("Input three coordinates of a triangle in (x,y) format, separated by spaces (e.g. 0 1 2 3 4 5):\n").split())
+x1, y1, x2, y2, x3, y3 = map(float, input("Input three coordinates of a triangle in (x,y) format, separated by spaces in the form of 'x1 y1 x2 y2 x3 y3' (e.g. 1 2 3 4 5 6):\n").split())
 
 a=math.sqrt((x2-x1)**2+(y2-y1)**2)
 b=math.sqrt((x3-x1)**2+(y3-y1)**2)
