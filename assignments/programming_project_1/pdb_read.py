@@ -1,4 +1,4 @@
-
+#https://github.com/jekuszynski/bch5884jek/blob/master/assignments/programming_project_1/pdb_read.py
 #!/usr/bin/env python3
 
 #import necessary modules
