@@ -4,37 +4,17 @@
 #importing all required modules
 import sys
 import numpy as np
+from scipy.signal import peak_widths, find_peaks
 from matplotlib import pyplot as plt
-
-#open and parse the given file
-f=open("superose6_50.asc")
-lines=f.readlines()
-f.close()
 
 time=[]
 sig=[]
-
-for line in lines[3:]:
-	words=line.split()
-	try:
-		time.append(float(words[0]))
-		sig.append(float(words[1]))
-	except:
-		continue
-
-time=np.array(time)
-sig=np.array(sig)
-dsig=np.gradient(sig)
-ddsig=np.gradient(dsig)
-
-print(time)
-
 tpeaks=[]
 
 def find_local_minima(arr,thr=5,noise=.1,target=tpeaks):
 	for t in range(len(arr)):
 		try:
-			prev_min = arr[t-int(thr):t-1].min()
+			prev_min = arr[t-int(thr):t].min()
 			next_min = arr[t+1:t+int(thr)].min()
 		except ValueError:
 			#exception handling for when trying to take a minimum of an empty array
@@ -49,35 +29,69 @@ def find_local_minima(arr,thr=5,noise=.1,target=tpeaks):
 			target.append(np.nan)
 			continue
 
-find_local_minima(ddsig,20,.5)
-peak_list=[]
+#translate values from minima points to real signal points
+def match_sigs(arr, minima=tpeaks, ref=sig):
+	for x in range(len(minima)):
+		if np.isnan(minima[x]):
+			arr.append(np.nan)
+			continue
+		else:
+			arr.append(ref[x])
 
-def find_peak_times(arr_t,arr_peaks=tpeaks):
-	for t in range(len(arr_peaks)), range(len(arr_t)):
-		if isinstance(arr_peaks[t],float):
-			peak_list.append(arr_t[t])
+#open and parse the given file
+f=open("superose6_50.asc")
+lines=f.readlines()
+f.close()
+
+for line in lines[3:]:
+	words=line.split()
+	try:
+		time.append(float(words[0]))
+		sig.append(float(words[1]))
+	except:
+		continue
+
+#setup x values from parsed file function
+time=np.array(time)
+sig=np.array(sig)
+dsig=np.gradient(sig)
+ddsig=np.gradient(dsig)
+
+#find local minima from 2nd derivative
+find_local_minima(ddsig,20,.5)
+
+#use local minima to find corresponding values in original signal
+peak_list=[]
+match_sigs(peak_list)
+
+p_widths=np.empty(881)
+
+#find peak widths by checking 1st derivative until value less than/greater than changes from pos -> neg or opposite
+def find_peak_widths(arr, dx=dsig, ref=sig):
+	for i in range(len(peak_list)):
+		if not np.isnan(peak_list[i]):
+			for j in range(len(dx)):
+				try:
+					if dx[i+j] <= dx[i]:
+						arr[i+j]=np.nan
+					else:
+						arr[i+j]=ref[i+j]
+						break
+				except IndexError:
+					continue
 		else:
 			continue
 
-find_peak_times(time)
-print(peak_list)
+#convert all 0's into nan values for matplotlib
+find_peak_widths(p_widths)
+p_widths=p_widths.tolist()
+p_widths2=[np.nan if x==0 else x for x in p_widths]
 
-# def find_peak_area(arr, ref=peak_list):
-# 	for t in range(len(arr)):
-# 		if arr[t] == any(ref):
-# 			asdfasdf
-# 			asdfasdf
-			#first/2nd derv here? Find width so long as the slope is decreasing?
-
-
-plt.plot(time,tpeaks,'o')
+#plot desired graph with peaks and widths
+plt.plot(time,peak_list,'o')
+plt.plot(time,p_widths2,'ro')
 plt.plot(time,sig)
-plt.plot(time,ddsig)
-plt.xlim(0,165)
-plt.ylim(-15,1000)
-plt.show()
-plt.plot(time,tpeaks,'o')
-plt.plot(time,ddsig)
-plt.xlim(0,165)
-plt.ylim(-15,20)
+plt.xlim(0,164)
+plt.ylim(15,1100)
+plt.figure(figsize=(10,10))
 plt.show()
