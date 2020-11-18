@@ -4,7 +4,6 @@
 #importing all required modules
 import sys
 import numpy as np
-from scipy.signal import peak_widths, find_peaks
 from matplotlib import pyplot as plt
 
 time=[]
