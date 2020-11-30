@@ -12,7 +12,8 @@ from scipy import signal,optimize
 
 path="/mnt/c/Users/roflc/Desktop/MCD 11-11-20/"
 d={}
-dd={}
+df_avgs={}
+df_diff={}
 
 for root, dirs, files in os.walk(path): #walk along all files in directory given a path
     for num, name in enumerate(files): #for each file in list of files...
@@ -43,65 +44,102 @@ for root, dirs, files in os.walk(path): #walk along all files in directory given
     #     ax.scatter(x,y,label=name,color=cmap(norm(c.values)))
     #     ax.legend(ncol=5)
 
-def plot_raw_mcd_eV(dic):
+def plot_mcd(dic,op='avg',x_axis='Energy (eV)'):
     fig,ax=plt.subplots()
     # norm=plt.Normalize(-10,10) #optional to remove discrete H bar divisions
     norm=colors.BoundaryNorm(np.linspace(-10,10,11),ncolors=256)
-    sm=plt.cm.ScalarMappable(cmap='coolwarm_r',norm=norm)
-    fig.colorbar(sm,ticks=range(-10,11,2),label='H (T)')
+    sm=plt.cm.ScalarMappable(cmap='coolwarm_r',norm=norm) 
+    fig.colorbar(sm,ticks=range(-10,11,2),label='H (T)') #make color bar based on H (T) for plot
 
-    for name, df in dic.items():
-        #Dr. Seaborn or: How I Learned to Stop Worrying and Love sns.lineplot. Such efficiency. Wow.
+    for df in dic.values():
+        #Dr. Seaborn or: How I Learned to Stop Worrying and Love sns.lineplot. Such efficiency. Much wow.
         sns.lineplot(data=df,x='energy',y='mdeg', linewidth=0.6,
                     hue='field',hue_norm=(-10,10),
                     palette=sns.color_palette('coolwarm_r',as_cmap=True),
                     legend=None)
-
-    plt.xlabel('Energy (eV)')
+    if x_axis=='Energy (eV)':
+        plt.xlabel(x_axis)
+    if op=='raw':
+        plt.title("Raw MCD")
+    if op=='avg':
+        plt.title("Averaged MCD")
     plt.ylabel('MCD (mdeg)')
-    plt.title("Raw MCD")
     plt.xlim(1.55,.75)
     plt.style.use('seaborn-paper')
     plt.show()
 
-# def calc_raw_avg_mcd_eV(dic): #Need to define this before finding the mcd difference? 
-
-#Could do both separately, but perhaps not good use of time. Maybe add separately later.
-
-
-
-# def calc_diff_mcd_eV(dic): #think about adding an add/sub option hear. Look up in Notion notes.
-#     for name, df in dic.items():
-#         x=d[name]['energy']
-#         c=d[name]['field']
-#         if int(re.search('(.*)(?=T)',name).group(0)) > 0:
-#             y=d[name]['mdeg']-d['-'+name]['mdeg'] #change to flip data. Will fix as option for function later.
-#         elif int(re.search('(.*)(?=T)',name).group(0)) = 0:
-#             y=d[name]['mdeg']-d[name]['mdeg']
-#         else:
-#             break
-
-        
-#         for ddname, dddf in dd.items():
-#             if ddname == 
-
-#         df = 
-#         d[diff] =
-#         return d[diff]
-
-
-def plot_diff_mcd_eV(dic):
-    fig,ax=plt.subplots()
-    norm=colors.BoundaryNorm(np.linspace(-10,10,11),ncolors=256)
-    sm=plt.cm.ScalarMappable(cmap='coolwarm_r',norm=norm)
-    fig.colorbar(sm,ticks=range(-10,11,2),label='H (T)')
-
+def calc_raw_avg_mcd(dic): #need to define this before finding the mcd difference
     for name, df in dic.items():
-        #Dr. Seaborn or: How I Learned to Stop Worrying and Love sns.lineplot. Such efficiency. Wow.
+        field = re.search('(.*)(?=T)',name).group(0) #set variable 'field' equal to int(field) from original dictionary
+        if field not in df_avgs: 
+            df_avgs[field] = pd.DataFrame() #if field is not in new dictionary, create an empty dataframe
+        if field in df_avgs:
+            df_concat=pd.concat([df_avgs[field], df]).groupby(['wavelength']) #concatenate field entry with new df entry, so long as field is matching
+            df_avgs[field] = df_concat #update dictionary entry with newly concatenated one
+        df_avgs[field]=df_avgs[field].mean() #take the average of the concatenated df
+
+def calc_diff_mcd(dic,op='sub'):
+    for name, df in dic.items():
+        df_diff[name] = pd.DataFrame()
+        if name == '0': #placeholder for now. In future would like to plot 0T field difference, but previous function looks like it deletes a version of 0 so no pair to subtract.
+            # if op=='add':
+            #     df_diff[name] = df + dic[list(name)[list(name).index(name)+3]]
+            # elif op=='sub':
+            #     df_diff[name] = df - dic[list(name)[list(name).index(name)+3]]
+            pass
+        elif '-' not in name: #loop only positive half of dictionary
+            if op=='add':
+                df_diff[name] = df + dic['-' + name] #add positive and negative dictionary entries
+                df_diff[name]['energy'] = df['energy'] #fix energy back to original values
+                df_diff[name]['field'] = df['field'] #fix field back to original values
+            elif op=='sub':
+                df_diff[name] = df - dic['-' + name] #subtract positive and negative dictionary entries
+                df_diff[name]['energy'] = df['energy'] #fix field back to original values
+                df_diff[name]['field'] = df['field']
+        else:
+            del df_diff[name]
+            continue
+    return df_diff
+             
+def plot_diff_mcd(dic,op='avg',x_axis='Energy (eV)'):
+    fig,ax=plt.subplots()
+    # norm=plt.Normalize(-10,10) #optional to remove discrete H bar divisions
+    norm=colors.BoundaryNorm(np.linspace(0,10,6),ncolors=256)
+    sm=plt.cm.ScalarMappable(cmap='Reds',norm=norm) 
+    fig.colorbar(sm,ticks=range(0,11,2),label='H (T)') #make color bar based on H (T) for plot
+
+    for df in dic.values():
+        #Dr. Seaborn or: How I Learned to Stop Worrying and Love sns.lineplot. Such efficiency. Much wow.
+        print(df)
         sns.lineplot(data=df,x='energy',y='mdeg', linewidth=0.6,
-                    hue='field',hue_norm=(-10,10),
-                    palette=sns.color_palette('coolwarm_r',as_cmap=True),
+                    hue='field',hue_norm=(0,10),
+                    palette=sns.color_palette('Reds',as_cmap=True),
                     legend=None)
+    if x_axis=='Energy (eV)':
+        plt.xlabel(x_axis)
+    if op=='raw':
+        plt.title("Raw MCD")
+    if op=='avg':
+        plt.title("Averaged MCD")
+    plt.ylabel('MCD (mdeg)')
+    plt.xlim(1.55,.75)
+    plt.style.use('seaborn-paper')
+    plt.show()
+        # x=d[name]['energy']
+        # c=d[name]['field']
+        # if int(re.search('(.*)(?=T)',name).group(0)) > 0:
+        #     y=d[name]['mdeg']-d['-'+name]['mdeg'] #change to flip data. Will fix as option for function later.
+        # elif int(re.search('(.*)(?=T)',name).group(0)) = 0:
+        #     y=d[name]['mdeg']-d[name]['mdeg']
+        # else:
+        #     break
+
+        # for ddname, dddf in dd.items():
+        #     if ddname == 
+
+        # df = 
+        # d[diff] =
+        # return d[diff]
 
     plt.xlabel('Energy (eV)')
     plt.ylabel('MCD (mdeg)')
@@ -110,5 +148,9 @@ def plot_diff_mcd_eV(dic):
     plt.style.use('seaborn-paper')
     plt.show()
 
-plot_raw_mcd_eV(d)
+plot_mcd(d,'raw')
 # plot_diff_mcd_eV(d)
+calc_raw_avg_mcd(d)
+plot_mcd(df_avgs,'avg')
+df_diff = calc_diff_mcd(df_avgs)
+plot_diff_mcd(df_diff)
