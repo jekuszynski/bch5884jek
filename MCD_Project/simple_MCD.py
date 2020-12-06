@@ -5,28 +5,31 @@ import os
 import re
 import pandas as pd
 import numpy as np
+import numpy.polynomial.polynomial as poly 
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.lines as lines
 import seaborn as sns
-from scipy import signal,optimize 
+from scipy import signal,optimize,interpolate
+import math
 
-path="/mnt/c/Users/roflc/Desktop/MCD 11-11-20/"
 d={}
+d_abs={}
 df_avgs={}
 df_diff={}
 
-for root, dirs, files in os.walk(path): #walk along all files in directory given a path
-    for num, name in enumerate(files): #for each file in list of files...
-        if "test" not in str.lower(name): #remove any test files performed during data acqusition
-            field_name = re.search('(.*)(?=T_)..',name).group(0) #search for beginning of file name "#T_" and set as name for df. Man this was difficult to figure out syntactically. 
-            f=field_name + str(num%3) #differentiate repeated scans at same field
-            # print("Adding", f + "...") #uncomment to check files are being added/named correctly
-            df=pd.read_table(path+name, sep='\t',names=['wavelength','chpx','chpy','pemx','pemy','deltaA']) #create dataframe for each file
-            df['field']=int(re.search('(.*)(?=T)',name).group(0)) #add column for field
-            df['energy']=1240/df['wavelength'] #calculate energy from wavelength
-            df['mdeg']=df['deltaA']*32982 # calculate mdeg from deltaA
-            d[f] = df #send dataframe to dictionary
+def parse_mcd(path):
+    for root, dirs, files in os.walk(path): #walk along all files in directory given a path
+        for num, name in enumerate(files): #for each file in list of files...
+            if "test" not in str.lower(name): #remove any test files performed during data acqusition
+                field_name = re.search('(.*)(?=T_)..',name).group(0) #search for beginning of file name "#T_" and set as name for df. Man this was difficult to figure out syntactically. 
+                f=field_name + str(num%3) #differentiate repeated scans at same field
+                # print("Adding", f + "...") #uncomment to check files are being added/named correctly
+                df=pd.read_table(path+name, sep='\t',names=['wavelength','pemx','pemy','chpx','chpy','deltaA']) #create dataframe for each file
+                df['field']=int(re.search('(.*)(?=T)',name).group(0)) #add column for field
+                df['energy']=1240/df['wavelength'] #calculate energy from wavelength
+                df['mdeg']=df['deltaA']*32982 # calculate mdeg from deltaA
+                d[f] = df #send dataframe to dictionary
 
 # print(d['-4T_0']['field'])
 # sys.exit()
@@ -128,10 +131,184 @@ def plot_diff_mcd(dic,op='avg',x_axis='Energy (eV)'):
     plt.savefig('diff_mcd',dpi=300,transparent=True,bbox_inches='tight')
     plt.show()
 
-# def load_abs():
+def parse_abs(path):
+    for root, dirs, files in os.walk(path): #walk along all files in directory given a path
+        for num, name in enumerate(files): #for each file in list of files...
+            if "blank" or "ems" in str.lower(name): #remove any test files performed during data acqusition
+                f = re.search('.*(?=_A)',name).group(0) #search for beginning of file name "#T_" and set as name for df. Man this was difficult to figure out syntactically. 
+                # print("Adding", f + "...") #uncomment to check files are being added/named correctly
+                df=pd.read_table(path+name, sep='\t',names=['wavelength','pemx','pemy','chpx','chpy','deltaA']) #create dataframe for each file
+                df['energy']=1240/df['wavelength'] #calculate energy from wavelength
+                d_abs[f] = df #send dataframe to dictionary
+    df_abs=pd.DataFrame(data=(d_abs['Ems']['wavelength'], d_abs['Ems']['energy'], d_abs['Ems']['chpx'], d_abs['Blank']['chpx'])).transpose() #make dataframe from ems/blank dictionary
+    df_abs.columns=['wavelength','energy','ems','blank'] #setup columns
+    df_abs['absorbance']=(2-np.log10(100 * df_abs['ems'] / df_abs['blank'])) #calculate absorbance from emission and blank data
+    df_abs['smoothed_absorbance']=signal.savgol_filter(df_abs['absorbance'],25,2) #smooth absorbance plot using Savitzky-Golay
+    return df_abs
 
+def plot_abs(df,op='smooth',x_axis='energy'):
+    fig,ax=plt.subplots()
+    if x_axis=='energy':
+        plt.xlabel('Energy (eV)')
+    if op=='raw':
+        plt.title("Raw Absorbance")
+        sns.lineplot(data=df,x='energy',y='absorbance', linewidth=0.6)
+    if op=='smooth':
+        plt.title("Smoothed Absorbance")
+        sns.lineplot(data=df,x='energy',y='smoothed_absorbance', linewidth=0.6)
+    plt.ylabel('Absorbance (a.u.)')
+    plt.xlim(2.1,0.75)
+    plt.style.use('seaborn-paper')
+    plt.savefig(op + '_abs',dpi=300,transparent=True,bbox_inches='tight')
+    plt.show()
+
+def plot_CP_diff(x,y,ev=0.04):
+    coeff_L=poly.polyfit([x+ev for x in x],y,9)
+    coeff_R=poly.polyfit([x-ev for x in x],y,9)
+    fit_L=poly.polyval(x,coeff_L)
+    fit_R=poly.polyval(x,coeff_R)
+    fit_diff=(fit_L-fit_R)/(np.max(x))*1000 #calculate LCP-RCP normalized to absorbance max. Will incorporate based on field later.
+    # x = x.values.tolist()
+    plt.figure(figsize=(6,6),dpi=80)
+
+    plt.subplot(2,1,1)
+    plt.ylabel('Absorbance (a.u.)')
+    plt.xlim(2.1,0.55)
+    plt.scatter(x,y,s=1.3,c='Black')
+    plt.plot(x,fit_L,c='Blue')
+    plt.plot(x,fit_R,c='Red')
+    plt.legend(('LCP','RCP','Raw'))
+
+    plt.subplot(2,1,2)
+    plt.ylabel('Absorbance (a.u.)')
+    plt.xlabel('Energy (eV)')
+    plt.xlim(2.1,0.55)
+    plt.plot(x,fit_diff,c='Purple')
+    plt.legend(('Simulated MCD'))
+    plt.show()
+
+    return fit_diff
+
+
+# df_abs['energy'],df_abs['absorbance']
+
+def func(ev,*p):
+    x=poly.polyfit(df_abs['energy'],df_abs['absorbance'],9)
+    LCP=poly.polyval(x+ev,p)
+    RCP=poly.polyval(x-ev,p)
+    return poly.polysub(LCP,RCP)
+
+    # coeff_L=poly.polyfit(x+ev,y,9)
+    # coeff_R=poly.polyfit(x-ev,y,9)
+    # coeff_fit=(coeff_L-coeff_R)
+    # return coeff_fit
+
+def func(x,*p):
+    polyL = 0
+    polyR = 0
+    for i, n in enumerate(range(1:10)):
+        polyL += n * (x+ev)**i
+    for i, n in enumerate(range(1:10)):
+        polyR += n * (x-eV)**i
+    return poly
+
+# def func(x,ev,*p):
+#     x -= ev
+#     poly.polyfit(x,y,9)
+#     return 
+
+def calc_effective_mass(abs_fit,diff_dic):
+    for field in diff_dic.keys():
+        xdata=diff_dic[field]['energy'] 
+        ydata=diff_dic[field]['mdeg']
+        p0=np.ones(9,)
+        popt,pcov = optimize.curve_fit(func,xdata,ydata,p0=p0,bounds=(0,1))
+
+        plt.figure(figsize=(6,6),dpi=80)
+        plt.title(str(field) + 'T Fit')
+        plt.ylabel('MCD (deltaA/A_max*B) (T^-1) (x 10^-3)')
+        plt.xlabel('Energy (eV)')
+        plt.xlim(1.55,0.75)
+        plt.plot(xdata,ydata,label='data')
+        plt.plot(xdata,[func(x,*popt) for x in xdata],label='fit')
+        plt.legend()
+        plt.savefig(str(field) + "T_fit",dpi=300,transparent=True,bbox_inches='tight')
+        
+        # simulated_fit=abs_fit/int(field) #normalized simulated fit by field
+        # x=diff_dic[field]['energy'] 
+        # y=diff_dic[field]['mdeg'] 
+        # exp_coeff=poly.polyfit(x,y,9)*1000
+        # experiment_fit=poly.polyval(x,exp_coeff)
+        # experiment_fit=experiment_fit/np.max(np.absolute(experiment_fit)) #normalize experimental fit
+
+        # ev=
+        # c=299792458
+        # e=1.60217662E-19
+        # w_c=c/(1240/(ev/1000)*(10^(-9)))
+        # m_e=9.10938356E-31
+        # effective_mass=e*int(field)/w_c/2/m_e/math.pi
+
+
+        # plt.plot(x,experiment_fit,c='Black')
+        # plt.plot(df_abs['energy'],simulated_fit,c='Red')
+        # plt.legend(('Experimental MCD','Simulated MCD'))
+        # plt.show()
+
+
+# def modeleq(x,t):
+# 	return x[0]+x[1]*np.exp(x[2]*t)
+# def residuals(coeffs,t,y):
+# # 	return modeleq(coeffs,t)-y
+	
+# def residuals(p,x,y):
+#     return y-f(*p)
+
+# popt, pcov = optimize.curve_fit()
+# # print(popt)
+# def data_calc():
+#     x=df_abs['energy']
+#     y=df_abs['absorbance']
+#     x0=[1.0,1.0,1.0]
+#     popt,pcov=optimize.least_squares(residuals,x0,args=(x,y))
+#     print(popt)
+
+
+
+# a=0.5
+# b=2.0
+# c=-1
+
+# t_min=0
+# t_max=10
+# n_points=100
+
+# t_train=np.linspace(t_min,t_max,n_points)
+# y_train=gen_data(t_train,a,b,c,noise=0.1,n_outliers=10)
+
+# x0 = np.array([1.0, 1.0, 0.0])
+# res_lsq=leastsq(residuals, x0, args=(t_train,y_train))
+# print (res_lsq)
+
+# t_test= np.linspace(t_min,t_max,n_points*10)
+# y_true= gen_data(t_test, a,b,c)
+# y_lsq= gen_data(t_test, *res_lsq[0])
+# resid=y_train-gen_data(t_train, *res_lsq[0])
+
+# plt.plot(t_train,y_train,'o')
+# plt.plot(t_test, y_true, 'k', linewidth=2, label='true')
+# plt.plot(t_test,y_lsq, label='fitted')
+# plt.plot(t_train, resid,'ro')
+# plt.xlabel('t')
+# plt.ylabel('y')
+# plt.show()
+
+parse_mcd("/mnt/c/Users/roflc/Desktop/MCD 11-11-20/")
+df_abs = parse_abs("/mnt/c/Users/roflc/Desktop/Abs 11-11-20/")
 plot_mcd(d,'raw')
 calc_raw_avg_mcd(d)
 plot_mcd(df_avgs,'avg')
 calc_diff_mcd(df_avgs)
 plot_diff_mcd(df_diff)
+plot_abs(df_abs)
+fit_diff=plot_CP_diff(df_abs['energy'],df_abs['absorbance'])
+calc_effective_mass(fit_diff,df_diff)
