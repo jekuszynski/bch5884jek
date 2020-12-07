@@ -189,28 +189,27 @@ def plot_CP_diff(x,y,ev=0.04):
 
     return fit_diff
 
-
 # df_abs['energy'],df_abs['absorbance']
 
-def func(ev,*p):
-    x=poly.polyfit(df_abs['energy'],df_abs['absorbance'],9)
-    LCP=poly.polyval(x+ev,p)
-    RCP=poly.polyval(x-ev,p)
-    return poly.polysub(LCP,RCP)
+def func(x,ev): #define simulated mcd function from absorbance spectrum
+    coeff=poly.polyfit(df_abs['energy'],df_abs['absorbance'],9) #find polynomial coeffs from original absorption spectra
+    LCP=poly.polyval(x+ev,coeff) #find y from +ev shifted LCP spectrum
+    RCP=poly.polyval(x-ev,coeff) #find y from -ev shifted RCP spectrum
+    return LCP-RCP #return y from LCP-RCP
 
     # coeff_L=poly.polyfit(x+ev,y,9)
     # coeff_R=poly.polyfit(x-ev,y,9)
     # coeff_fit=(coeff_L-coeff_R)
     # return coeff_fit
 
-def func(x,*p):
-    polyL = 0
-    polyR = 0
-    for i, n in enumerate(range(1:10)):
-        polyL += n * (x+ev)**i
-    for i, n in enumerate(range(1:10)):
-        polyR += n * (x-eV)**i
-    return poly
+# def func(x,*p):
+#     polyL = 0
+#     polyR = 0
+#     for i, n in enumerate(range(1:10)):
+#         polyL += n * (x+ev)**i
+#     for i, n in enumerate(range(1:10)):
+#         polyR += n * (x-eV)**i
+#     return poly
 
 # def func(x,ev,*p):
 #     x -= ev
@@ -218,11 +217,21 @@ def func(x,*p):
 #     return 
 
 def calc_effective_mass(abs_fit,diff_dic):
+    ev_list=[]
+    m_list=[]
     for field in diff_dic.keys():
         xdata=diff_dic[field]['energy'] 
         ydata=diff_dic[field]['mdeg']
-        p0=np.ones(9,)
-        popt,pcov = optimize.curve_fit(func,xdata,ydata,p0=p0,bounds=(0,1))
+        popt,pcov = optimize.curve_fit(func,xdata,ydata,bounds=(0,1)) #lsf optimization to spit out ev
+
+        ev=popt[0] #return minimzed ev to variable
+        ev_list.append(ev) #add ev to list
+        c=299792458 #speed of light (m/s)
+        e=1.60217662E-19 #charge of electron (C)
+        m_e=9.10938356E-31 #mass of electron (kg)
+        w_c=c/(1240/(ev/1000)*(10**-9)) #cyclotron resonance frequency
+        effective_mass=e*int(field)/w_c/2/m_e/math.pi #effective mass (m*/m_e)
+        m_list.append(effective_mass) #add m* to list
 
         plt.figure(figsize=(6,6),dpi=80)
         plt.title(str(field) + 'T Fit')
@@ -233,22 +242,16 @@ def calc_effective_mass(abs_fit,diff_dic):
         plt.plot(xdata,[func(x,*popt) for x in xdata],label='fit')
         plt.legend()
         plt.savefig(str(field) + "T_fit",dpi=300,transparent=True,bbox_inches='tight')
-        
+    print(ev_list)
+    print(m_list)
         # simulated_fit=abs_fit/int(field) #normalized simulated fit by field
-        # x=diff_dic[field]['energy'] 
-        # y=diff_dic[field]['mdeg'] 
         # exp_coeff=poly.polyfit(x,y,9)*1000
         # experiment_fit=poly.polyval(x,exp_coeff)
         # experiment_fit=experiment_fit/np.max(np.absolute(experiment_fit)) #normalize experimental fit
 
-        # ev=
-        # c=299792458
-        # e=1.60217662E-19
-        # w_c=c/(1240/(ev/1000)*(10^(-9)))
-        # m_e=9.10938356E-31
-        # effective_mass=e*int(field)/w_c/2/m_e/math.pi
 
-
+        
+        
         # plt.plot(x,experiment_fit,c='Black')
         # plt.plot(df_abs['energy'],simulated_fit,c='Red')
         # plt.legend(('Experimental MCD','Simulated MCD'))
