@@ -288,6 +288,7 @@ def writeHTMLfile(file_name):
     ##-----Functional Code Below-----##
 
 '''parse all data files'''
+#Change these pathways if using from GitHub.
 parse_mcd("/mnt/c/Users/roflc/Desktop/MCD 11-11-20/")
 df_abs = parse_abs("/mnt/c/Users/roflc/Desktop/Abs 11-11-20/")
 
